@@ -5,22 +5,16 @@
 #include "driver/rmt_rx.h"
 #include "driver/rmt_tx.h"
 #include "driver/gpio.h"
+#include "ir_command_write.h"
 
 #define TAG "IR_SNIFFER"
 
 #define RMT_RX_GPIO GPIO_NUM_15
 #define IR_LED GPIO_NUM_16
 #define RMT_RESOLUTION_HZ 1000000 // 1us per tick
-#define IR_LENGTH 34
 
 #define MEM_BLOCK_SYMBOLS 64
 #define QUEUE_SIZE 4
-
-typedef struct
-{
-    uint16_t duration0;
-    uint16_t duration1;
-} ir_symbol_t;
 
 static QueueHandle_t ir_queue;
 
@@ -113,11 +107,12 @@ void app_main(void)
     // 7. Enable tx channel
     ESP_ERROR_CHECK(rmt_enable(tx_channel));
 
-    ir_symbol_t power_button[IR_LENGTH];
-    int power_button_len = 0;
-    bool captured = false;
-
+    ir_symbol_t ir_commands[5][IR_LENGTH];
+    int command_lengths[5] = {0};
     rmt_symbol_word_t tx_symbols[IR_LENGTH];
+    bool captured = false;
+    int cmd_index = 0;
+
     while (1)
     {
         rmt_rx_done_event_data_t rx_data;
@@ -127,39 +122,18 @@ void app_main(void)
             int count = rx_data.num_symbols;
             ESP_LOGI(TAG, "Frame received: symbols = %d", rx_data.num_symbols);
 
-            if (count > 34)
+            if (count > 34) // to do something about IR_LENGTH later
                 count = 34;
-            if (!captured)
+            if (true) // true for test -> !captured <-
             {
-                for (int i = 0; i < count; i++)
-                {
-                    rmt_symbol_word_t s = raw_symbols[i];
-                    power_button[i].duration0 = s.duration0;
-                    power_button[i].duration1 = s.duration1;
-                    ESP_LOGI(TAG,
-                             "[%d] l0=%d d0=%d | l1=%d d1=%d",
-                             i,
-                             s.level0, s.duration0,
-                             s.level1, s.duration1);
-                }
-                power_button_len = count;
-                captured = true;
-                ESP_LOGI(TAG, "Power button captured: %d symbols", power_button_len);
 
-                for (size_t i = 0; i < power_button_len; i++)
-                {
-                    tx_symbols[i].level0 = 1;
-                    tx_symbols[i].duration0 = power_button[i].duration0;
-                    tx_symbols[i].level1 = 0;
-                    tx_symbols[i].duration1 = power_button[i].duration1;
-                }
-                ESP_LOGI(TAG, "Power button copied to tx_symbols");
+                write_command(ir_commands, raw_symbols, tx_symbols, command_lengths, &captured, count, cmd_index);
 
                 ESP_ERROR_CHECK(rmt_transmit(
                     tx_channel,
                     copy_encoder,
                     tx_symbols,
-                    power_button_len * sizeof(rmt_symbol_word_t),
+                    command_lengths[cmd_index] * sizeof(rmt_symbol_word_t),
                     &tx_trans_config));
 
                 ESP_ERROR_CHECK(rmt_tx_wait_all_done(tx_channel, portMAX_DELAY));
