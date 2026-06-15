@@ -81,7 +81,7 @@ stateDiagram-v2
 ## Wiring / Prototype Schematic
 ![Wiring schematic](docs/wiring_schematic.png)
 
-## Video
+## Gifs
 ![Turn on demo](docs/video/turn_on_demo.gif) 
 
 ![Change scene demo](docs/video/change_scene_demo.gif) 
