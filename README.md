@@ -83,7 +83,7 @@ stateDiagram-v2
 
 
 ## Test PCB
-![Wiring schematic](docs/testPCB.png)
+![Test PCB](docs/testPCB.png)
 
 ## Gifs
 ![Turn on demo](docs/video/turn_on_demo.gif) 
