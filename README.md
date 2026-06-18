@@ -81,6 +81,10 @@ stateDiagram-v2
 ## Wiring / Prototype Schematic
 ![Wiring schematic](docs/wiring_schematic.png)
 
+
+## Test PCB
+![Wiring schematic](docs/testPCB.png)
+
 ## Gifs
 ![Turn on demo](docs/video/turn_on_demo.gif) 
 
